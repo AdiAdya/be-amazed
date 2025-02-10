@@ -16,7 +16,11 @@ const Home: React.FC = () => {
       setIntro(response.data.intro);
       setError(null);
     } catch (err) {
-      console.log('Error generating intro:', err.response ? err.response.data : err.message);
+      if (axios.isAxiosError(err)) {
+        console.log('Error generating intro:', err.response ? err.response.data : err.message);
+      } else {
+        console.log('Error generating intro:', (err as Error).message);
+      }
       setError('Failed to generate intro. Please try again.');
     }
   };
