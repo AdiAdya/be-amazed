@@ -1,38 +1,46 @@
-'use client';
+// be-amazed-frontend/app/page.tsx
+"use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-export default function Home() {
-  const [script, setScript] = useState('');
-  const [intro, setIntro] = useState('');
-  const [loading, setLoading] = useState(false);
+const Home: React.FC = () => {
+  const [script, setScript] = useState<string>('');
+  const [intro, setIntro] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
-  const generateIntro = async () => {
-    setLoading(true);
-    setIntro('');
+  const handleSubmit = async () => {
     try {
-      const response = await fetch('http://localhost:5000/generate-intro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ script })
-      });
-      const data = await response.json();
-      setIntro(data.intro);
-    } catch (error) {
-      console.log(error);
-      setIntro('Error generating intro');
+      console.log('Sending request to backend with script:', script);
+      const response = await axios.post<{ intro: string }>('http://localhost:5000/api/generate-intro', { script });
+      setIntro(response.data.intro);
+      setError(null);
+    } catch (err) {
+      console.log('Error generating intro:', err.response ? err.response.data : err.message);
+      setError('Failed to generate intro. Please try again.');
     }
-    setLoading(false);
   };
 
   return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-xl font-bold mb-4">YouTube Intro Generator</h1>
-      <textarea className="w-full p-2 border rounded" rows={5} placeholder="Paste your script here..." value={script} onChange={(e) => setScript(e.target.value)} />
-      <button className="mt-3 p-2 bg-blue-500 text-white rounded" onClick={generateIntro} disabled={loading}>
-        {loading ? 'Generating...' : 'Generate Intro'}
+    <div className="min-h-screen flex flex-col items-center justify-center py-2">
+      <h1 className="text-4xl font-bold mb-4 text-foreground">YouTube Intro Generator</h1>
+      <textarea
+        className="border rounded p-2 w-1/2 mb-4 placeholder-gray-500 text-black"
+        style={{ color: 'black' }} // Ensure text color is black
+        value={script}
+        onChange={(e) => setScript(e.target.value)}
+        placeholder="Paste your video script here..."
+      />
+      <button
+        className="bg-blue-500 text-white px-4 py-2 rounded"
+        onClick={handleSubmit}
+      >
+        Generate Intro
       </button>
-      {intro && <p className="mt-4 p-3 bg-gray-100 border rounded">{intro}</p>}
+      {intro && <p className="mt-4 p-4 border rounded bg-gray-100 text-foreground">{intro}</p>}
+      {error && <p className="mt-4 p-4 border rounded bg-red-100 text-red-700">{error}</p>}
     </div>
   );
-}
+};
+
+export default Home;
